@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pyjwt
+passlib[bcrypt]
+python-multipart
+python-dotenv
+easyocr
+pillow
+geopy
+ultralytics
+torch
+torchvision
+huggingface-hub
+groq

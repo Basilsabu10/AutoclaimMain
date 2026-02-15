@@ -1,0 +1,44 @@
+====================================================================================================
+FORENSIC ANALYSIS TABLE - COMPLETE DATA
+====================================================================================================
+
+Total Records: 1
+
+
+====================================================================================================
+RECORD #1 - Forensic Analysis ID: 1
+====================================================================================================
+Claim ID: 1
+
+📍 IMAGE METADATA:
+  Timestamp: None
+  GPS Coordinates: Lat None, Lon None
+  Location Name: None
+  Camera: None None
+
+🔤 OCR - NUMBER PLATE DETECTION:
+  Plate Text: None
+  Confidence: None
+  Raw OCR Texts: []
+
+🤖 AI DAMAGE ANALYSIS:
+  Damage Type: scratch
+  Severity: minor
+  Affected Parts: ['front bumper not shown, but door has scratch']
+  Recommendation: approve
+  Estimated Cost: $100 - $500
+  AI Confidence: None
+  Risk Flags: ['inconsistency between claim and image']
+
+💭 AI REASONING:
+  The image shows a minor scratch on the vehicle's door. The claim mentions the front bumper was scratched, but the image provided shows a scratch on the door. Assuming the claim and image are related, the damage seems minor and likely inexpensive to repair.
+
+ℹ️ ANALYSIS METADATA:
+  Analyzed At: 2026-02-05 07:58:24.144023
+  Analysis Version: 1.0
+
+----------------------------------------------------------------------------------------------------
+
+====================================================================================================
+END OF FORENSIC ANALYSIS DATA
+====================================================================================================

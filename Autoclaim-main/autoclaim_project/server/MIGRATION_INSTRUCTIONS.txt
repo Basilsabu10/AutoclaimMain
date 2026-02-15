@@ -1,0 +1,71 @@
+"""
+SIMPLE DATABASE MIGRATION INSTRUCTIONS
+=======================================
+
+To upgrade your database to v2.0 with comprehensive forensic analysis:
+
+STEP 1: Stop the Server
+------------------------
+- Press CTRL+C in the python terminal to stop the server
+
+STEP 2: Backup Current Database
+--------------------------------
+cd c:\Users\basil\AutoClaim\autoclaim_project\server
+mkdir db_backups
+copy autoclaim.db db_backups\autoclaim_backup_%date:~-4,4%%date:~-10,2%%date:~-7,2%.db
+
+STEP 3: Delete Old Database
+----------------------------
+del autoclaim.db
+
+STEP 4: Restart Server
+-----------------------
+python run.py
+
+The server will automatically create a new database with the comprehensive
+forensic analysis schema (60+ new fields).
+
+STEP 5: Test
+------------
+1. Submit a new claim through the frontend
+2. Run: python test_ai_storage.py
+3. Check that comprehensive forensic data is being stored
+
+=======================================
+NEW FIELDS ADDED (60+):
+=======================================
+
+YOLOv8 Detection:
+- yolo_damage_detected, yolo_detections, yolo_severity, yolo_summary
+
+Forensic Analysis (Image Integrity):
+- authenticity_score, forgery_detected, forgery_indicators, 
+  digital_manipulation_confidence
+
+Vehicle Identification:
+- vehicle_make, vehicle_model, vehicle_year, vehicle_color,
+  vehicle_identification_confidence, license_plate_detected,
+  license_plate_text, license_plate_confidence, 
+  license_plate_match_status, vin_detected, vin_number
+
+Enhanced Damage Assessment:
+- ai_damage_detected, ai_damaged_panels, ai_structural_damage,
+  ai_safety_concerns, ai_cost_confidence
+
+Pre-existing Damage Detection:
+- pre_existing_damage_detected, pre_existing_indicators,
+  pre_existing_description, pre_existing_confidence
+
+Contextual Analysis:
+- location_type, weather_conditions, lighting_quality,
+  photo_quality, consistent_with_narrative
+
+Cross-verification:
+- narrative_match, policy_match, timeline_consistent,
+  verification_discrepancies
+
+Risk Assessment:
+- fraud_probability, overall_confidence_score,
+  human_review_priority, recommended_actions
+
+=======================================

@@ -1,0 +1,91 @@
+{
+  "forensic_analysis": {
+    "authenticity_score": 90,
+    "forgery_indicators": [],
+    "digital_manipulation_detected": false,
+    "manipulation_confidence": 0
+  },
+  "vehicle_identification": {
+    "make": "Volkswagen",
+    "model": "Polo",
+    "year": "2014-2019",
+    "color": "Grey",
+    "license_plate": {
+      "detected": true,
+      "text": "KL 63 C 0599",
+      "confidence": 100,
+      "match_status": "UNKNOWN"
+    },
+    "vin_detected": false,
+    "identification_confidence": 80
+  },
+  "damage_assessment": {
+    "damage_detected": true,
+    "damaged_panels": [
+      {
+        "panel_name": "Front Bumper",
+        "damage_type": "SCRATCH",
+        "severity": "MINOR",
+        "area_percentage": 10,
+        "confidence": 80
+      }
+    ],
+    "overall_severity": "MINOR",
+    "estimated_repair_cost": {
+      "min_usd": 100,
+      "max_usd": 300,
+      "confidence": 80
+    },
+    "structural_damage": false,
+    "safety_concerns": []
+  },
+  "pre_existing_damage": {
+    "detected": false,
+    "indicators": [],
+    "description": "",
+    "confidence": 0
+  },
+  "contextual_analysis": {
+    "location_type": "Parking Lot",
+    "weather_conditions": "Clear",
+    "lighting_quality": "Good",
+    "photo_quality": "Medium",
+    "consistent_with_narrative": true
+  },
+  "cross_verification": {
+    "narrative_match": true,
+    "policy_match": false,
+    "timeline_consistent": false,
+    "discrepancies": [
+      "No policy data provided"
+    ]
+  },
+  "risk_flags": [
+    "INCONSISTENT_NARRATIVE",
+    "POLICY_MISMATCH"
+  ],
+  "final_assessment": {
+    "overall_confidence_score": 80,
+    "recommendation": "REVIEW",
+    "decision_reasoning": "The image appears authentic, but inconsistencies in the narrative and missing policy data require further review.",
+    "human_review_priority": "MEDIUM",
+    "fraud_probability": "LOW",
+    "recommended_actions": [
+      "Verify policy data",
+      "Verify user narrative"
+    ]
+  },
+  "success": true,
+  "provider": "groq",
+  "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+  "damage_type": "scratch",
+  "severity": "minor",
+  "affected_parts": [
+    "front bumper"
+  ],
+  "recommendation": "review",
+  "reasoning": "The image appears authentic, but inconsistencies in the narrative and missing policy data require further review.",
+  "cost_min": 100,
+  "cost_max": 300,
+  "confidence": 80
+}

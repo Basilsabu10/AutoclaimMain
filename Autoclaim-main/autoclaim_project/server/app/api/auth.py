@@ -1,0 +1,194 @@
+"""
+Authentication API routes.
+Handles user registration, login, and current user info.
+"""
+
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from typing import Optional
+
+from app.db.database import get_db
+from app.db import models
+from app.core.security import verify_password, get_password_hash, create_access_token
+from app.core.dependencies import get_current_user
+
+router = APIRouter(tags=["Authentication"])
+
+
+class RegisterRequest(BaseModel):
+    """Registration request body schema."""
+    email: str
+    password: str
+    username: Optional[str] = None  # Frontend uses 'username' for name
+    name: Optional[str] = None
+    policy_number: Optional[str] = None
+    vehicle_number: Optional[str] = None
+
+
+@router.post("/register")
+def register(
+    request: RegisterRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Register a new user account (public registration).
+    
+    This endpoint only allows registration of regular 'user' accounts.
+    Agents must be registered by admins via the admin dashboard.
+    
+    Args:
+        request: Registration data (email, password, name, policy_number, vehicle_number)
+    """
+    # Check if user already exists
+    existing = db.query(models.User).filter(models.User.email == request.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Use 'username' field if 'name' is not provided (frontend compatibility)
+    user_name = request.name or request.username
+    
+    # Hash the password
+    hashed_pw = get_password_hash(request.password)
+    new_user = models.User(
+        email=request.email, 
+        hashed_password=hashed_pw, 
+        role="user",  # Hardcoded: public registration only creates 'user' accounts
+        name=user_name,
+        policy_id=request.policy_number,
+        vehicle_number=request.vehicle_number
+    )
+    db.add(new_user)
+    db.commit()
+    
+    return {"message": "User created successfully"}
+
+
+@router.post("/login")
+def login(
+    form_data: OAuth2PasswordRequestForm = Depends(), 
+    db: Session = Depends(get_db)
+):
+    """
+    Login and get access token.
+    
+    Uses OAuth2 password flow - username field contains email.
+    """
+    user = db.query(models.User).filter(models.User.email == form_data.username).first()
+    
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    token = create_access_token(data={
+        "sub": user.email, 
+        "role": user.role, 
+        "user_id": user.id
+    })
+    
+    return {
+        "access_token": token, 
+        "token_type": "bearer", 
+        "role": user.role
+    }
+
+
+@router.get("/me")
+def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    """Get current logged-in user info."""
+    return current_user
+
+
+@router.post("/admin/register-agent")
+def register_agent(
+    email: str = Query(..., description="Agent email address"),
+    password: str = Query(..., description="Agent password"),
+    name: str = Query(..., description="Agent full name"),
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Register a new agent account (admin only).
+    
+    Only administrators can create agent accounts.
+    Agents have elevated permissions compared to regular users.
+    
+    Args:
+        email: Agent email address
+        password: Plain text password (will be hashed)
+        name: Agent's full name
+        current_user: Current authenticated user (must be admin)
+        db: Database session
+    """
+    # Verify admin role
+    if current_user.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can register agents"
+        )
+    
+    # Check if email already exists
+    existing = db.query(models.User).filter(models.User.email == email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create agent account
+    hashed_pw = get_password_hash(password)
+    new_agent = models.User(
+        email=email,
+        hashed_password=hashed_pw,
+        role="agent",
+        name=name
+    )
+    db.add(new_agent)
+    db.commit()
+    db.refresh(new_agent)
+    
+    return {
+        "message": "Agent created successfully",
+        "agent": {
+            "id": new_agent.id,
+            "email": new_agent.email,
+            "name": new_agent.name,
+            "role": new_agent.role,
+            "created_at": new_agent.created_at.isoformat()
+        }
+    }
+
+
+@router.get("/admin/agents")
+def get_all_agents(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all agent accounts (admin only).
+    
+    Returns a list of all users with the 'agent' role.
+    
+    Args:
+        current_user: Current authenticated user (must be admin)
+        db: Database session
+    """
+    # Verify admin role
+    if current_user.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can view agents"
+        )
+    
+    # Get all agents
+    agents = db.query(models.User).filter(models.User.role == "agent").all()
+    
+    return {
+        "agents": [
+            {
+                "id": agent.id,
+                "email": agent.email,
+                "name": agent.name,
+                "role": agent.role,
+                "created_at": agent.created_at.isoformat()
+            }
+            for agent in agents
+        ]
+    }
