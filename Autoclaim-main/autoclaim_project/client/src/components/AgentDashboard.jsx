@@ -5,6 +5,7 @@ import "./Dashboard.css";
 function AgentDashboard() {
     const [claims, setClaims] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [updating, setUpdating] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -33,6 +34,33 @@ function AgentDashboard() {
             console.error("Failed to fetch claims:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const updateClaimStatus = async (claimId, newStatus) => {
+        setUpdating(claimId);
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(
+                `http://localhost:8000/claims/${claimId}/status?new_status=${newStatus}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (response.ok) {
+                // Update local state
+                setClaims(claims.map(claim =>
+                    claim.id === claimId ? { ...claim, status: newStatus } : claim
+                ));
+            }
+        } catch (error) {
+            console.error("Failed to update status:", error);
+        } finally {
+            setUpdating(null);
         }
     };
 
@@ -149,12 +177,35 @@ function AgentDashboard() {
                                             </td>
                                             <td>{new Date(claim.created_at).toLocaleDateString()}</td>
                                             <td className="actions-cell">
-                                                <button
-                                                    className="action-btn view"
-                                                    onClick={() => handleViewClaim(claim.id)}
-                                                >
-                                                    👁️ View
-                                                </button>
+                                                {updating === claim.id ? (
+                                                    <span className="updating">Updating...</span>
+                                                ) : (
+                                                    <div className="action-buttons">
+                                                        <button
+                                                            className="action-btn approve"
+                                                            onClick={() => updateClaimStatus(claim.id, "approved")}
+                                                            disabled={claim.status === "approved"}
+                                                            title="Approve"
+                                                        >
+                                                            ✓
+                                                        </button>
+                                                        <button
+                                                            className="action-btn reject"
+                                                            onClick={() => updateClaimStatus(claim.id, "rejected")}
+                                                            disabled={claim.status === "rejected"}
+                                                            title="Reject"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                        <button
+                                                            className="action-btn view"
+                                                            onClick={() => handleViewClaim(claim.id)}
+                                                            title="View Details"
+                                                        >
+                                                            👁️
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}

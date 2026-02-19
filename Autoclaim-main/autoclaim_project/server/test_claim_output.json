@@ -1,0 +1,61 @@
+{
+  "claim_id": 5,
+  "status": "completed",
+  "description": "Vehicle: 2020 Kia seltos\r\nLicense Plate: KL-07-CU-7476\r\nAccident Date: 2026-01-31\r\nClaim Amount: \u20b940000\r\n\r\nA bus crashed into my car after leaving side for the car .Bus crashed into my front damaging entire front including bonnet,bumber,grill and headlight",
+  "created_at": "2026-02-19 03:40:28.150202",
+  "image_paths": [
+    "C:\\Users\\basil\\Downloads\\Autoclaim-main\\Autoclaim-main\\autoclaim_project\\server\\uploads\\damage_ec3f6baa-8fc2-4e08-bd7e-d03b88c2939a.jpg",
+    "C:\\Users\\basil\\Downloads\\Autoclaim-main\\Autoclaim-main\\autoclaim_project\\server\\uploads\\damage_d377c6bd-f09d-452f-8d87-f374aec6dbe1.jpg",
+    "C:\\Users\\basil\\Downloads\\Autoclaim-main\\Autoclaim-main\\autoclaim_project\\server\\uploads\\damage_b5755d84-a4d8-444a-bf09-84c29606b448.jpg"
+  ],
+  "forensic": {
+    "id": 2,
+    "analyzed_at": "2026-02-19 04:34:40.683240",
+    "damage_detected": false,
+    "severity": null,
+    "damage_type": null,
+    "affected_parts": [],
+    "damaged_panels": [],
+    "vehicle_make": null,
+    "vehicle_model": null,
+    "vehicle_color": null,
+    "license_plate": null,
+    "authenticity_score": null,
+    "has_raw_response": true
+  },
+  "ai_response": {
+    "metadata": {
+      "timestamp": null,
+      "gps_lat": null,
+      "gps_lon": null,
+      "location_name": null,
+      "camera_type": null,
+      "filename_parsed": false,
+      "source": null
+    },
+    "ocr": {
+      "plate_text": null,
+      "confidence": null
+    },
+    "yolo_damage": {
+      "success": false,
+      "damage_detected": false,
+      "detections": [],
+      "severity": "none",
+      "affected_parts": [],
+      "summary": "YOLOv8 model not initialized - call init_yolo_model() first"
+    },
+    "ai_analysis": {
+      "damage_type": null,
+      "severity": null,
+      "affected_parts": [],
+      "recommendation": "review",
+      "cost_min": null,
+      "cost_max": null,
+      "analysis_text": "Request timed out.",
+      "risk_flags": [],
+      "provider": "groq"
+    },
+    "verification": null
+  }
+}

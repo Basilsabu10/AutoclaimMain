@@ -1,6 +1,6 @@
 """
-AI Service Orchestrator - YOLOv8 + Groq Hybrid.
-Combines self-hosted YOLOv8 for fast damage detection with Groq for detailed analysis.
+AI Service Orchestrator - Pure Data Extraction + Rule-Based Decisions.
+Combines self-hosted YOLOv8 with Groq for data extraction, then applies Python rules for decisions.
 """
 
 import os
@@ -22,37 +22,165 @@ except ImportError:
     YOLO_AVAILABLE = False
     print("[WARNING] YOLOv8 service not available")
 
-# Import Groq service for detailed analysis
+# Import Groq service for data extraction
 try:
-    from app.services.groq_service import analyze_damage as groq_analyze
+    from app.services.groq_service import extract_vehicle_data
     GROQ_AVAILABLE = True
 except ImportError:
     GROQ_AVAILABLE = False
     print("[WARNING] Groq service not available")
 
 
+def prepare_verification_data(
+    extracted_data: Dict[str, Any],
+    metadata: Dict[str, Any],
+    ocr: Dict[str, Any],
+    yolo_damage: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Transform AI extraction results into the format expected by verification_rules.py.
+    
+    Args:
+        extracted_data: Groq extraction results (identity, damage, forensics, scene)
+        metadata: EXIF metadata
+        ocr: OCR results
+        yolo_damage: YOLO detection results
+        
+    Returns:
+        dict structured for VerificationRules.verify_claim()
+    """
+    identity = extracted_data.get("identity", {})
+    damage = extracted_data.get("damage", {})
+    forensics = extracted_data.get("forensics", {})
+    scene = extracted_data.get("scene", {})
+    
+    # Build the comprehensive analysis structure
+    ai_analysis = {
+        # EXIF Metadata
+        "exif_metadata": {
+            "timestamp": metadata.get("timestamp"),
+            "gps_coordinates": {
+                "latitude": metadata.get("gps_lat"),
+                "longitude": metadata.get("gps_lon"),
+            },
+            "location_name": metadata.get("location_name"),
+            "camera_make": metadata.get("camera_make"),
+            "camera_model": metadata.get("camera_model"),
+        },
+        
+        # OCR Data
+        "ocr_data": {
+            "plate_text": ocr.get("plate_text"),
+            "confidence": ocr.get("confidence") or 0.0,
+            "chase_number": None,  # Not currently extracted
+            "chase_number_confidence": 0.0,
+        },
+        
+        # YOLO Results
+        "yolo_results": {
+            "yolo_damage_detected": yolo_damage.get("damage_detected", False),
+            "yolo_severity": yolo_damage.get("severity", "none"),
+            "yolo_detections": yolo_damage.get("detections", []),
+        },
+        
+        # Vehicle Identification
+        "vehicle_identification": {
+            "make": identity.get("vehicle_make"),
+            "model": identity.get("vehicle_model"),
+            "year": identity.get("vehicle_year"),
+            "color": identity.get("vehicle_color"),
+            "detected_confidence": identity.get("identification_confidence", 0.0),
+            "license_plate_visible": identity.get("license_plate_visible", False),
+            "license_plate_obscured": identity.get("license_plate_obscured", False),
+        },
+        
+        # Forensic Indicators
+        "forensic_indicators": {
+            "is_screen_recapture": forensics.get("is_screen_recapture", False),
+            "has_ui_elements": forensics.get("has_ui_elements", False),
+            "has_watermarks": forensics.get("has_watermarks", False),
+            "image_quality": forensics.get("image_quality", "high"),
+            "is_blurry": forensics.get("is_blurry", False),
+            "multiple_light_sources": forensics.get("multiple_light_sources", False),
+            "shadows_inconsistent": forensics.get("shadows_inconsistent", False),
+        },
+        
+        # Authenticity Indicators
+        "authenticity_indicators": {
+            "stock_photo_likelihood": "unknown",  # Not currently available
+            "editing_detected": False,
+            "lighting_consistent": not forensics.get("multiple_light_sources", False),
+            "shadows_natural": not forensics.get("shadows_inconsistent", False),
+            "compression_uniform": True,
+        },
+        
+        # Damage Assessment
+        "damage_assessment": {
+            "ai_damage_detected": damage.get("damage_detected", False),
+            "ai_severity": damage.get("severity", "none"),
+            "damaged_panels": damage.get("damaged_panels", []),
+            "damage_type": damage.get("damage_type"),
+            "severity_score": damage.get("severity_score", 0.0),
+            "airbags_deployed": damage.get("airbags_deployed", False),
+            "fluid_leaks_visible": damage.get("fluid_leaks_visible", False),
+            "parts_missing": damage.get("parts_missing", False),
+            "ai_cost_min": damage.get("cost_estimate_min"),
+            "ai_cost_max": damage.get("cost_estimate_max"),
+        },
+        
+        # Pre-existing Indicators
+        "pre_existing_indicators": {
+            "rust_detected": damage.get("is_rust_present", False),
+            "paint_fading": damage.get("is_paint_faded_around_damage", False),
+            "dirt_accumulation": damage.get("is_dirt_in_damage", False),
+            "old_repairs_visible": False,
+        },
+        
+        # Narrative Consistency
+        "narrative_consistency": {
+            "visual_evidence_matches": scene.get("consistent_with_narrative", True),
+            "inconsistencies": [],
+        },
+        
+        # Multi-image Analysis (placeholder - would need orchestrator to aggregate)
+        "multi_image_analysis": {},
+    }
+    
+    return ai_analysis
+
+
+
 def analyze_claim(
     damage_image_paths: List[str],
     front_image_path: Optional[str],
-    description: str
+    description: str,
+    claim_amount: int = 0,
+    policy_data: Optional[Dict] = None,
+    claim_history: Optional[List[Dict]] = None
 ) -> Dict[str, Any]:
     """
-    Perform complete claim analysis using YOLOv8 + Groq hybrid approach.
+    Perform complete claim analysis using AI extraction + rule-based decisions.
     
     Pipeline:
     1. Extract EXIF metadata (timestamp, GPS) from images
     2. Extract number plate from front image using OCR
     3. Detect damage using self-hosted YOLOv8 (FAST, FREE)
-    4. Analyze damage using Groq for detailed reasoning (when damage detected)
+    4. Extract vehicle data using Groq (identity, damage, forensics, scene)
+    5. Apply comprehensive rule-based verification (16 checks across 5 phases)
     
     Args:
         damage_image_paths: List of damage photo paths
         front_image_path: Front view image for plate detection
         description: User's claim description
+        claim_amount: Claimed repair/loss amount in ₹
+        policy_data: Policy data for cross-checking (vehicle, dates, coverage)
+        claim_history: List of prior claims for duplicate detection
         
     Returns:
-        dict with metadata, ocr, yolo_damage, and ai_analysis results
+        dict with metadata, ocr, yolo_damage, ai_analysis, and verification results
     """
+    from app.services.verification_rules import VerificationRules
+    
     result = {
         "metadata": {
             "timestamp": None,
@@ -85,7 +213,8 @@ def analyze_claim(
             "analysis_text": None,
             "risk_flags": [],
             "provider": None
-        }
+        },
+        "verification": None  # Will hold VerificationResult
     }
     
     # 1. Extract EXIF/filename metadata from first available image
@@ -118,29 +247,71 @@ def analyze_claim(
     else:
         result["yolo_damage"]["summary"] = "YOLOv8 not available" if not YOLO_AVAILABLE else "No images provided"
     
-    # 4. Groq detailed analysis - ALWAYS RUN for insurance claims
-    # Note: YOLO base model (yolov8n) only detects objects (car, person), NOT damage
-    # We need Groq's vision model for actual damage assessment
+    # 4. Groq data extraction - ALWAYS RUN for insurance claims
     if GROQ_AVAILABLE:
         all_images = (damage_image_paths or []).copy()
         if front_image_path:
             all_images.append(front_image_path)
         
-        # Pass YOLO context to Groq if available (for reference)
-        yolo_context = result["yolo_damage"] if result["yolo_damage"]["success"] else None
+        print("[AI] Running Groq data extraction...")
+        extraction_result = extract_vehicle_data(
+            image_paths=all_images,
+            description=description,
+            policy_data=policy_data
+        )
         
-        print("[AI] Running Groq damage analysis...")
-        ai_result = groq_analyze(all_images, description, yolo_context)
-        ai_result["provider"] = "groq"
-        result["ai_analysis"] = ai_result
-        
-        # If YOLO detected damage, merge results for best accuracy
-        if yolo_context and yolo_context.get("damage_detected"):
-            # Merge YOLO and Groq results for best accuracy
-            if not ai_result.get("severity"):
-                ai_result["severity"] = yolo_context.get("severity", "minor")
-            if not ai_result.get("affected_parts"):
-                ai_result["affected_parts"] = yolo_context.get("affected_parts", [])
+        if extraction_result.get("success"):
+            # Store extraction results
+            result["ai_analysis"] = {
+                **extraction_result,
+                "provider": "groq",
+            }
+            
+            # 5. Apply comprehensive rule-based verification
+            try:
+                # Prepare data for verification engine
+                verification_data = prepare_verification_data(
+                    extracted_data=extraction_result,
+                    metadata=result["metadata"],
+                    ocr=result["ocr"],
+                    yolo_damage=result["yolo_damage"]
+                )
+                
+                # Run verification engine
+                verification_engine = VerificationRules()
+                verification_result = verification_engine.verify_claim(
+                    claim_amount=claim_amount,
+                    ai_analysis=verification_data,
+                    policy_data=policy_data or {},
+                    history=claim_history
+                )
+                
+                # Store verification results
+                result["verification"] = verification_result.to_dict()
+                
+                print(f"[Verification] Status: {verification_result.status}, "
+                      f"Confidence: {verification_result.confidence_level}, "
+                      f"Score: {verification_result.severity_score:.1f}, "
+                      f"Passed: {len(verification_result.passed_checks)}, "
+                      f"Failed: {len(verification_result.failed_checks)}")
+                
+                # Also add key verification fields to ai_analysis for backward compatibility
+                result["ai_analysis"]["verification_status"] = verification_result .status
+                result["ai_analysis"]["ai_recommendation"] = verification_result.status
+                result["ai_analysis"]["overall_confidence_score"] = verification_result.confidence_score
+                result["ai_analysis"]["fraud_probability"] = "HIGH" if verification_result.status == "REJECTED" else "MEDIUM" if verification_result.status == "FLAGGED" else "LOW"
+                result["ai_analysis"]["ai_risk_flags"] = [f.rule_id for f in verification_result.failed_checks]
+                result["ai_analysis"]["human_review_priority"] = "CRITICAL" if verification_result.status == "REJECTED" else "HIGH" if verification_result.requires_human_review else "LOW"
+                result["ai_analysis"]["ai_reasoning"] = verification_result.decision_reason
+                
+            except Exception as e:
+                print(f"[Verification] Error: {e}")
+                result["verification"] = {"error": str(e)}
+                # Fall back to extraction-only results
+                result["ai_analysis"]["ai_reasoning"] = f"Verification engine error: {e}"
+        else:
+            result["ai_analysis"]["analysis_text"] = extraction_result.get("error", "Extraction failed")
+            result["ai_analysis"]["provider"] = "groq"
     else:
         # Groq not available - use YOLO results if available
         if YOLO_AVAILABLE and result["yolo_damage"].get("damage_detected"):
@@ -153,6 +324,7 @@ def analyze_claim(
             result["ai_analysis"]["provider"] = "none"
     
     return result
+
 
 
 def initialize_services() -> Dict[str, bool]:

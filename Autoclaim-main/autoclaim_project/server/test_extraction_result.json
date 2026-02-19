@@ -1,0 +1,104 @@
+{
+  "metadata": {
+    "timestamp": null,
+    "gps_lat": null,
+    "gps_lon": null,
+    "location_name": null,
+    "camera_type": null,
+    "filename_parsed": false,
+    "source": null
+  },
+  "ocr": {
+    "plate_text": null,
+    "confidence": null
+  },
+  "yolo_damage": {
+    "success": false,
+    "damage_detected": false,
+    "detections": [],
+    "severity": "none",
+    "affected_parts": [],
+    "summary": "YOLOv8 model not initialized - call init_yolo_model() first"
+  },
+  "ai_analysis": {
+    "identity": {
+      "detected_objects": [
+        "car",
+        "damage_area"
+      ],
+      "vehicle_make": "Kia",
+      "vehicle_model": "Seltos",
+      "vehicle_year": 2020,
+      "vehicle_color": "maroon",
+      "license_plate_text": "KL07CU7475",
+      "license_plate_visible": true,
+      "license_plate_obscured": false
+    },
+    "damage": {
+      "damage_detected": true,
+      "damage_type": "crush",
+      "severity_score": 0.8,
+      "damaged_panels": [
+        "front_bumper",
+        "hood"
+      ],
+      "impact_point": "front_center",
+      "paint_damage": true,
+      "glass_damage": true,
+      "is_rust_present": false,
+      "rust_locations": [],
+      "is_dirt_in_damage": false,
+      "is_paint_faded_around_damage": false,
+      "airbags_deployed": false,
+      "fluid_leaks_visible": false,
+      "parts_missing": false,
+      "estimated_cost_range_INR": {
+        "min": 50000,
+        "max": 200000
+      }
+    },
+    "forensics": {
+      "is_screen_recapture": false,
+      "has_ui_elements": false,
+      "has_watermarks": false,
+      "image_quality": "medium",
+      "is_blurry": false,
+      "lighting_quality": "good",
+      "multiple_light_sources": true,
+      "shadows_inconsistent": false
+    },
+    "scene": {
+      "location_type": "street",
+      "time_of_day": "day",
+      "weather_visible": "clear",
+      "debris_visible": true,
+      "other_vehicles_visible": true,
+      "is_moving_traffic": true
+    },
+    "success": true,
+    "provider": "groq",
+    "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+    "decisions": {
+      "ai_recommendation": "REVIEW",
+      "fraud_probability": "VERY_LOW",
+      "fraud_score": 0.1,
+      "overall_confidence_score": 100.0,
+      "ai_risk_flags": [
+        "MULTIPLE_LIGHT_SOURCES"
+      ],
+      "human_review_priority": "MEDIUM",
+      "ai_reasoning": "Rule-based decision: 1 risk flags detected. Fraud score: 0.10. Damage severity: 0.80"
+    }
+  },
+  "decisions": {
+    "ai_recommendation": "REVIEW",
+    "fraud_probability": "VERY_LOW",
+    "fraud_score": 0.1,
+    "overall_confidence_score": 100.0,
+    "ai_risk_flags": [
+      "MULTIPLE_LIGHT_SOURCES"
+    ],
+    "human_review_priority": "MEDIUM",
+    "ai_reasoning": "Rule-based decision: 1 risk flags detected. Fraud score: 0.10. Damage severity: 0.80"
+  }
+}

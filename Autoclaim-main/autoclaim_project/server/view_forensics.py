@@ -27,17 +27,36 @@ for i, f in enumerate(forensics, 1):
     print(f'\n  🔤 OCR Results:')
     print(f'    Plate Text: {f.ocr_plate_text}')
     print(f'    Confidence: {f.ocr_plate_confidence}')
-    print(f'    Raw Texts: {f.ocr_raw_texts}')
+    print(f'    Plate Visible: {f.license_plate_visible}')
+    print(f'    Plate Obscured: {f.license_plate_obscured}')
     
-    # AI Analysis
-    print(f'\n  🤖 AI Damage Analysis:')
+    # AI Extraction (v3.0)
+    print(f'\n  🔍 AI Extraction Results:')
+    print(f'    Detected Objects: {f.detected_objects}')
+    print(f'    Vehicle: {f.vehicle_make} {f.vehicle_model} {f.vehicle_year} ({f.vehicle_color})')
     print(f'    Damage Type: {f.ai_damage_type}')
-    print(f'    Severity: {f.ai_severity}')
-    print(f'    Affected Parts: {f.ai_affected_parts}')
+    print(f'    Severity Score: {f.damage_severity_score}')
+    print(f'    Impact Point: {f.impact_point}')
+    print(f'    Affected Panels: {f.ai_damaged_panels}')
+    
+    # Forensics (v3.0)
+    print(f'\n  🔬 Image Forensics:')
+    print(f'    Screen Recapture: {f.is_screen_recapture}')
+    print(f'    Has UI Elements: {f.has_ui_elements}')
+    print(f'    Image Quality: {f.image_quality}')
+    print(f'    Is Blurry: {f.is_blurry}')
+    print(f'    Rust Present: {f.is_rust_present}')
+    print(f'    Dirt in Damage: {f.is_dirt_in_damage}')
+    
+    # Rule-Based Decisions (v3.0)
+    print(f'\n  ⚖️ Rule-Based Decisions:')
     print(f'    Recommendation: {f.ai_recommendation}')
-    print(f'    Cost Range: ${f.ai_cost_min} - ${f.ai_cost_max}')
+    print(f'    Fraud Probability: {f.fraud_probability}')
+    print(f'    Fraud Score: {f.fraud_score}')
     print(f'    Risk Flags: {f.ai_risk_flags}')
-    print(f'    Confidence: {f.ai_confidence}')
+    print(f'    Overall Confidence: {f.overall_confidence_score}')
+    print(f'    Review Priority: {f.human_review_priority}')
+    print(f'    Cost Range: ₹{f.ai_cost_min} - ₹{f.ai_cost_max}')
     
     # Reasoning (truncated if too long)
     reasoning = f.ai_reasoning or "N/A"
@@ -49,6 +68,8 @@ for i, f in enumerate(forensics, 1):
     print(f'\n  ℹ️ Analysis Metadata:')
     print(f'    Analyzed At: {f.analyzed_at}')
     print(f'    Version: {f.analysis_version}')
+    print(f'    Provider: {f.ai_provider}')
+    print(f'    Model: {f.ai_model}')
     
     print('\n' + '-'*80 + '\n')
 

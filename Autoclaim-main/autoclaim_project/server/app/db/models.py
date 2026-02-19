@@ -103,86 +103,105 @@ class ForensicAnalysis(Base):
     yolo_summary = Column(Text, nullable=True)
     
     # ============================================================
-    # FORENSIC ANALYSIS (Image Integrity)
+    # FORENSIC ANALYSIS (Image Integrity - AI Extracted)
     # ============================================================
-    authenticity_score = Column(Float, nullable=True)  # 0-100
-    forgery_detected = Column(Boolean, default=False)
+    is_screen_recapture = Column(Boolean, default=False)
+    has_ui_elements = Column(Boolean, default=False)
+    has_watermarks = Column(Boolean, default=False)
+    image_quality = Column(String, nullable=True)  # high|medium|low
+    is_blurry = Column(Boolean, default=False)
+    multiple_light_sources = Column(Boolean, default=False)
+    shadows_inconsistent = Column(Boolean, default=False)
+    
+    # Legacy fields (computed from extracted data)
+    authenticity_score = Column(Float, nullable=True)  # 0-100 (computed)
+    forgery_detected = Column(Boolean, default=False)  # computed
     forgery_indicators = Column(JSON, default=list)  # Array of manipulation signs
-    digital_manipulation_confidence = Column(Float, nullable=True)  # 0-100
     
     # ============================================================
-    # VEHICLE IDENTIFICATION (Groq AI)
+    # VEHICLE IDENTIFICATION (Groq AI - Identity Extraction)
     # ============================================================
+    detected_objects = Column(JSON, default=list)  # ["car", "damage_area"]
     vehicle_make = Column(String, nullable=True)
     vehicle_model = Column(String, nullable=True)
     vehicle_year = Column(String, nullable=True)
     vehicle_color = Column(String, nullable=True)
-    vehicle_identification_confidence = Column(Float, nullable=True)
     
     # License Plate Details
     license_plate_detected = Column(Boolean, default=False)
     license_plate_text = Column(String, nullable=True)
-    license_plate_confidence = Column(Float, nullable=True)
     license_plate_match_status = Column(String, nullable=True)  # MATCH, MISMATCH, UNKNOWN
+    license_plate_visible = Column(Boolean, default=False)
+    license_plate_obscured = Column(Boolean, default=False)
     
-    vin_detected = Column(Boolean, default=False)
-    vin_number = Column(String, nullable=True)
     
     # ============================================================
-    # DAMAGE ASSESSMENT (Comprehensive)
+    # DAMAGE ASSESSMENT (AI Extraction + Computed)
     # ============================================================
     ai_damage_detected = Column(Boolean, default=False)
-    ai_damaged_panels = Column(JSON, default=list)  # Array of {panel, type, severity, confidence}
-    ai_damage_type = Column(String, nullable=True)  # Primary damage type
-    ai_severity = Column(String, nullable=True)  # overall: none, minor, moderate, severe, totaled
-    ai_affected_parts = Column(JSON, default=list)  # List of panel names
-    ai_structural_damage = Column(Boolean, default=False)
-    ai_safety_concerns = Column(JSON, default=list)  # Array of safety issues
+    ai_damaged_panels = Column(JSON, default=list)  # Array of panel names from AI
+    ai_damage_type = Column(String, nullable=True)  # dent|scratch|crack|shatter|crush|tear|missing
+    damage_severity_score = Column(Float, nullable=True)  # 0.00-1.00 from AI extraction
+    ai_severity = Column(String, nullable=True)  # Computed: none, minor, moderate, severe, totaled
+    ai_affected_parts = Column(JSON, default=list)  # List of panel names (deprecated, use ai_damaged_panels)
+    impact_point = Column(String, nullable=True)  # front_center|front_left|front_right|side_left|side_right|rear_center|multiple
+    
+    # Specific Damage Indicators (Extracted)
+    paint_damage = Column(Boolean, default=False)
+    glass_damage = Column(Boolean, default=False)
+    is_rust_present = Column(Boolean, default=False)
+    rust_locations = Column(JSON, default=list)
+    is_dirt_in_damage = Column(Boolean, default=False)
+    is_paint_faded_around_damage = Column(Boolean, default=False)
+    airbags_deployed = Column(Boolean, default=False)
+    fluid_leaks_visible = Column(Boolean, default=False)
+    parts_missing = Column(Boolean, default=False)
+    ai_structural_damage = Column(Boolean, default=False)  # Computed: True if severe/totaled
+    
     
     # Cost Estimation
     ai_cost_min = Column(Integer, nullable=True)
     ai_cost_max = Column(Integer, nullable=True)
-    ai_cost_confidence = Column(Float, nullable=True)
+    repair_cost_breakdown = Column(JSON, nullable=True)  # Part-by-part breakdown [{part, inr_min, inr_max, ...}]
     
     # ============================================================
-    # PRE-EXISTING DAMAGE DETECTION
+    # PRE-EXISTING DAMAGE DETECTION (Computed from extracted indicators)
     # ============================================================
-    pre_existing_damage_detected = Column(Boolean, default=False)
-    pre_existing_indicators = Column(JSON, default=list)  # rust, old_repair, weathering, etc
-    pre_existing_description = Column(Text, nullable=True)
-    pre_existing_confidence = Column(Float, nullable=True)
+    pre_existing_damage_detected = Column(Boolean, default=False)  # Computed
+    pre_existing_indicators = Column(JSON, default=list)  # Computed from rust, dirt, faded paint
+    pre_existing_description = Column(Text, nullable=True)  # Computed
+    pre_existing_confidence = Column(Float, nullable=True)  # Computed
     
     # ============================================================
-    # CONTEXTUAL ANALYSIS
+    # CONTEXTUAL ANALYSIS (Scene Extraction)
     # ============================================================
-    location_type = Column(String, nullable=True)  # STREET, PARKING_LOT, etc
-    weather_conditions = Column(String, nullable=True)
-    lighting_quality = Column(String, nullable=True)  # GOOD, FAIR, POOR
-    photo_quality = Column(String, nullable=True)  # HIGH, MEDIUM, LOW
-    consistent_with_narrative = Column(Boolean, nullable=True)
+    location_type = Column(String, nullable=True)  # street|parking_lot|garage|highway|residential
+    time_of_day = Column(String, nullable=True)  # day|night|dusk|unknown
+    weather_visible = Column(String, nullable=True)  # clear|rain|snow|fog|unknown
+    weather_conditions = Column(String, nullable=True)  # alias for weather_visible
+    debris_visible = Column(Boolean, default=False)
+    other_vehicles_visible = Column(Boolean, default=False)
+    is_moving_traffic = Column(Boolean, default=False)
+    
+    lighting_quality = Column(String, nullable=True)  # good|poor
+    photo_quality = Column(String, nullable=True)  # Same as image_quality
+    consistent_with_narrative = Column(Boolean, nullable=True)  # Computed
+    
+
+    # ============================================================
+    # RISK ASSESSMENT & FLAGS (Rule-Based Computed)
+    # ============================================================
+    ai_risk_flags = Column(JSON, default=list)  # Array of risk flag strings (COMPUTED)
+    fraud_probability = Column(String, nullable=True)  # VERY_LOW, LOW, MEDIUM, HIGH (COMPUTED)
+    fraud_score = Column(Float, nullable=True)  # 0.0-1.0 (COMPUTED)
     
     # ============================================================
-    # CROSS-VERIFICATION
+    # FINAL ASSESSMENT (Rule-Based Computed)
     # ============================================================
-    narrative_match = Column(Boolean, nullable=True)
-    policy_match = Column(Boolean, nullable=True)
-    timeline_consistent = Column(Boolean, nullable=True)
-    verification_discrepancies = Column(JSON, default=list)  # List of inconsistencies
-    
-    # ============================================================
-    # RISK ASSESSMENT & FLAGS
-    # ============================================================
-    ai_risk_flags = Column(JSON, default=list)  # Array of risk flag strings
-    fraud_probability = Column(String, nullable=True)  # LOW, MEDIUM, HIGH
-    
-    # ============================================================
-    # FINAL ASSESSMENT
-    # ============================================================
-    overall_confidence_score = Column(Float, nullable=True)  # 0-100
-    ai_recommendation = Column(String, nullable=True)  # APPROVE, REVIEW, REJECT
-    ai_reasoning = Column(Text, nullable=True)  # Decision reasoning
-    human_review_priority = Column(String, nullable=True)  # LOW, MEDIUM, HIGH, CRITICAL
-    recommended_actions = Column(JSON, default=list)  # Next steps
+    overall_confidence_score = Column(Float, nullable=True)  # 0-100 (COMPUTED)
+    ai_recommendation = Column(String, nullable=True)  # APPROVE, REVIEW, REJECT (COMPUTED)
+    ai_reasoning = Column(Text, nullable=True)  # Decision reasoning (COMPUTED)
+    human_review_priority = Column(String, nullable=True)  # LOW, MEDIUM, HIGH, CRITICAL (COMPUTED)
     
     # ============================================================
     # METADATA & RAW DATA
@@ -191,7 +210,7 @@ class ForensicAnalysis(Base):
     ai_provider = Column(String, default="groq")  # groq, yolo, etc
     ai_model = Column(String, nullable=True)  # Model version used
     analyzed_at = Column(DateTime, default=datetime.utcnow)
-    analysis_version = Column(String, default="2.0")  # Forensic analysis version
+    analysis_version = Column(String, default="3.0")  # v3.0: Pure extraction + rule-based decisions
     
     # Relationship
     claim = relationship("Claim", back_populates="forensic_analysis")

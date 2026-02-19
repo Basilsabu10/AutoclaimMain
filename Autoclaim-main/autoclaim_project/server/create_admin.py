@@ -1,41 +1,51 @@
+import sys
+import os
 
-from database import SessionLocal
-from models import User
-import auth
+# Add server directory to path
+sys.path.append(os.path.join(os.getcwd(), 'app'))
 
-# Admin credentials - change these as needed
-ADMIN_EMAIL = "admin@autoclaim.com"
-ADMIN_PASSWORD = "admin123"  # Change this to a secure password!
+from sqlalchemy.orm import Session
+from app.db.database import SessionLocal
+from app.db import models
+from app.core.security import get_password_hash
 
 def create_admin():
     db = SessionLocal()
     try:
-        # Check if admin already exists
-        existing = db.query(User).filter(User.email == ADMIN_EMAIL).first()
-        if existing:
-            print(f"Admin user '{ADMIN_EMAIL}' already exists.")
+        email = "admin@autoclaim.com"
+        password = "admin"
+        
+        # Check if exists
+        user = db.query(models.User).filter(models.User.email == email).first()
+        hashed_pw = get_password_hash(password)
+        
+        if user:
+            print(f"User {email} already exists.")
+            # Always update password to ensure we know it
+            user.hashed_password = hashed_pw
+            print("Updated password to 'admin'")
+            
+            if user.role != "admin":
+                print(f"Updating role to admin (was {user.role})")
+                user.role = "admin"
+            
+            db.commit()
             return
-        
-        # Hash the password using the auth module
-        hashed_password = auth.get_password_hash(ADMIN_PASSWORD)
-        
-        # Create admin user
-        admin = User(
-            email=ADMIN_EMAIL,
-            password_hash=hashed_password,
-            role="admin"
+
+        print(f"Creating new admin user: {email}")
+        hashed_pw = get_password_hash(password)
+        new_admin = models.User(
+            email=email,
+            hashed_password=hashed_pw,
+            role="admin",
+            name="System Admin"
         )
-        db.add(admin)
+        db.add(new_admin)
         db.commit()
-        
-        print(f"Admin user created successfully!")
-        print(f"Email: {ADMIN_EMAIL}")
-        print(f"Password: {ADMIN_PASSWORD}")
-        print(f"Role: admin")
+        print("Admin user created successfully.")
         
     except Exception as e:
         print(f"Error creating admin: {e}")
-        db.rollback()
     finally:
         db.close()
 

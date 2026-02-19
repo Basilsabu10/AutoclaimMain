@@ -11,6 +11,7 @@ from app.db.database import SessionLocal
 from app.db import models
 from app.services import ai_orchestrator
 from app.services.forensic_mapper import map_forensic_to_db
+from app.services.repair_estimator_service import estimate_repair_cost
 
 
 def process_claim_ai_analysis(
@@ -43,11 +44,59 @@ def process_claim_ai_analysis(
         db.commit()
         print(f"[Background Task] Processing claim {claim_id}...")
         
-        # Perform AI analysis
+        # Fetch policy data for verification
+        policy_data = None
+        if claim.policy_id:
+            policy = db.query(models.Policy).filter(models.Policy.id == claim.policy_id).first()
+            if policy:
+                policy_data = {
+                    "vehicle_make": policy.vehicle_make,
+                    "vehicle_model": policy.vehicle_model,
+                    "vehicle_year": policy.vehicle_year,
+                    "vehicle_registration": policy.vehicle_registration,
+                    "status": policy.status,
+                    "start_date": policy.start_date.isoformat() if policy.start_date else None,
+                    "end_date": policy.end_date.isoformat() if policy.end_date else None,
+                    "plan_coverage": policy.plan.coverage_amount if policy.plan else None,
+                    "location": None,  # Not stored in current schema
+                }
+                print(f"[Background Task] Loaded policy data for claim {claim_id}")
+        
+        # Fetch claim history for duplicate detection
+        claim_history = []
+        if claim.user_id:
+            prior_claims = db.query(models.Claim).filter(
+                models.Claim.user_id == claim.user_id,
+                models.Claim.id != claim_id  # Exclude current claim
+            ).all()
+            
+            for prior in prior_claims:
+                claim_history.append({
+                    "claim_id": prior.id,
+                    "status": prior.status,
+                    "created_at": prior.created_at.isoformat() if prior.created_at else None,
+                    "vehicle_registration": prior.vehicle_number_plate,
+                })
+            
+            if claim_history:
+                print(f"[Background Task] Found {len(claim_history)} prior claims for user {claim.user_id}")
+        
+        # Determine claim amount (from estimated cost or default)
+        claim_amount = 0
+        if claim.estimated_cost_max:
+            claim_amount = claim.estimated_cost_max
+        elif claim.estimated_cost_min:
+            claim_amount = claim.estimated_cost_min
+        # If no estimate, verification will use 0 (which may trigger amount threshold checks)
+        
+        # Perform AI analysis with verification
         ai_result = ai_orchestrator.analyze_claim(
             damage_image_paths=damage_image_paths,
             front_image_path=front_image_path,
-            description=description
+            description=description,
+            claim_amount=claim_amount,
+            policy_data=policy_data,
+            claim_history=claim_history
         )
         
         if ai_result:
@@ -55,15 +104,58 @@ def process_claim_ai_analysis(
             if ai_result.get("ocr"):
                 claim.vehicle_number_plate = ai_result["ocr"].get("plate_text")
             
-            # Update claim with AI analysis
-            if ai_result.get("ai_analysis"):
-                analysis = ai_result["ai_analysis"]
-                claim.ai_recommendation = analysis.get("recommendation")
-                claim.estimated_cost_min = analysis.get("cost_min")
-                claim.estimated_cost_max = analysis.get("cost_max")
+            # Update claim with verification results (v4.0 - comprehensive rule-based verification)
+            if ai_result.get("verification"):
+                verification = ai_result["verification"]
+                claim.ai_recommendation = verification.get("status")  # APPROVED, FLAGGED, REJECTED
+                
+            # Also check legacy decisions field for backward compatibility
+            elif ai_result.get("decisions"):
+                decisions = ai_result["decisions"]
+                claim.ai_recommendation = decisions.get("ai_recommendation")
             
             # Create or update forensic analysis
             forensic_fields = map_forensic_to_db(ai_result)
+            
+            # ── Repair Cost Estimation ───────────────────────────────────────
+            # Extract damaged panels and vehicle info from AI result.
+            # ai_result["ai_analysis"] is the merged Groq extraction dict which
+            # contains sub-keys: damage, identity, forensics, scene.
+            ai_analysis = ai_result.get("ai_analysis", {})
+            damaged_panels = (
+                ai_analysis.get("damage", {}).get("damaged_panels")          # Groq nested path
+                or forensic_fields.get("ai_damaged_panels")                  # already-mapped field
+                or []
+            )
+            vehicle_make  = (ai_analysis.get("identity", {}).get("vehicle_make")
+                             or forensic_fields.get("vehicle_make"))
+            vehicle_model = (ai_analysis.get("identity", {}).get("vehicle_model")
+                             or forensic_fields.get("vehicle_model"))
+            vehicle_year  = (ai_analysis.get("identity", {}).get("vehicle_year")
+                             or forensic_fields.get("vehicle_year"))
+            
+            if damaged_panels:
+                cost_estimate = estimate_repair_cost(
+                    damaged_panels=damaged_panels,
+                    vehicle_make=vehicle_make,
+                    vehicle_model=vehicle_model,
+                    vehicle_year=vehicle_year
+                )
+                # Store part-by-part breakdown in forensic fields
+                forensic_fields["repair_cost_breakdown"] = cost_estimate
+                # Update claim cost fields with INR totals from estimator
+                claim.estimated_cost_min = cost_estimate["total_inr_min"]
+                claim.estimated_cost_max = cost_estimate["total_inr_max"]
+                print(f"[Background Task] Repair estimate: "
+                      f"₹{cost_estimate['total_inr_min']:,} – ₹{cost_estimate['total_inr_max']:,} "
+                      f"({len(cost_estimate['breakdown'])} parts)")
+            else:
+                # Fall back to Groq's own INR estimate if no panels detected
+                if ai_result.get("ai_analysis", {}).get("damage", {}).get("estimated_cost_range_INR"):
+                    cost_range = ai_result["ai_analysis"]["damage"]["estimated_cost_range_INR"]
+                    claim.estimated_cost_min = cost_range.get("min")
+                    claim.estimated_cost_max = cost_range.get("max")
+            # ────────────────────────────────────────────────────────────────
             
             # Check if forensic analysis already exists
             existing_forensic = db.query(models.ForensicAnalysis).filter(

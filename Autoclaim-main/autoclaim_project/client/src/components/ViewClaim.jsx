@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Navbar from "./Navbar";
 import "./ViewClaim.css";
 
 function ViewClaim() {
@@ -80,542 +79,616 @@ function ViewClaim() {
 
     if (loading) {
         return (
-            <>
-                <Navbar />
-                <div className="view-claim-container">
-                    <div className="loading-spinner">Loading claim details...</div>
-                </div>
-            </>
+            <div className="view-claim-container">
+                <div className="loading-spinner">Loading claim details...</div>
+            </div>
         );
     }
 
     if (error || !claim) {
         return (
-            <>
-                <Navbar />
-                <div className="view-claim-container">
-                    <div className="error-message">
-                        <h2>Error Loading Claim</h2>
-                        <p>{error || "Claim not found"}</p>
-                        <button onClick={() => navigate("/dashboard")} className="back-btn">
-                            Return to Dashboard
-                        </button>
-                    </div>
+            <div className="view-claim-container">
+                <div className="error-message">
+                    <h2>Error Loading Claim</h2>
+                    <p>{error || "Claim not found"}</p>
+                    <button onClick={() => navigate("/dashboard")} className="back-btn">
+                        Return to Dashboard
+                    </button>
                 </div>
-            </>
+            </div>
         );
     }
 
     return (
-        <>
-            <Navbar />
-            <div className="view-claim-container">
-                <div className="view-claim-header">
-                    <button onClick={() => navigate(-1)} className="back-btn">
-                        ← Back
-                    </button>
-                    <h1>Claim Details #{claim.id}</h1>
-                </div>
+        <div className="view-claim-container">
+            <div className="view-claim-header">
+                <button onClick={() => navigate(-1)} className="back-btn">
+                    ← Back
+                </button>
+                <h1>Claim Details #{claim.id}</h1>
+            </div>
 
-                {/* Processing Status Banner */}
-                {(claim.processing_status === "pending" || claim.processing_status === "processing") && (
-                    <div className="processing-banner" style={{
-                        backgroundColor: '#fff3cd',
-                        border: '2px solid #ffc107',
-                        borderRadius: '8px',
-                        padding: '15px 20px',
-                        marginBottom: '20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '15px'
-                    }}>
-                        <div className="spinner" style={{
-                            width: '24px',
-                            height: '24px',
-                            border: '3px solid #f3f3f3',
-                            borderTop: '3px solid #ffc107',
-                            borderRadius: '50%',
-                            animation: 'spin 1s linear infinite'
-                        }}></div>
-                        <div>
-                            <strong>🔄 Rule-Based Verification in Progress...</strong>
-                            <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#666' }}>
-                                Analyzing your claim with 8 fraud detection rules and AI image analysis. This usually takes 10-30 seconds.
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                {claim.processing_status === "failed" && (
-                    <div className="processing-banner" style={{
-                        backgroundColor: '#f8d7da',
-                        border: '2px solid #dc3545',
-                        borderRadius: '8px',
-                        padding: '15px 20px',
-                        marginBottom: '20px'
-                    }}>
-                        <strong>⚠️ Verification Analysis Failed</strong>
-                        <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
-                            There was an error processing your claim. Our team will review it manually.
+            {/* Processing Status Banner */}
+            {(claim.processing_status === "pending" || claim.processing_status === "processing") && (
+                <div className="processing-banner" style={{
+                    backgroundColor: 'rgba(115, 146, 183, 0.15)',
+                    border: '2px solid #7392B7',
+                    borderRadius: '8px',
+                    padding: '15px 20px',
+                    marginBottom: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '15px'
+                }}>
+                    <div className="spinner" style={{
+                        width: '24px',
+                        height: '24px',
+                        border: '3px solid #D8E1E9',
+                        borderTop: '3px solid #7392B7',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                    }}></div>
+                    <div>
+                        <strong style={{ color: '#1e2e3f' }}>🔄 Rule-Based Verification in Progress...</strong>
+                        <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#35516b' }}>
+                            Analyzing your claim with 8 fraud detection rules and AI image analysis. This usually takes 10-30 seconds.
                         </p>
                     </div>
-                )}
+                </div>
+            )}
 
-                <div className="claim-grid">
-                    {/* Basic Information */}
-                    <div className="claim-card">
-                        <h2>📋 Basic Information</h2>
-                        <div className="info-grid">
+            {claim.processing_status === "failed" && (
+                <div className="processing-banner" style={{
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    border: '2px solid rgba(239, 68, 68, 0.4)',
+                    borderRadius: '8px',
+                    padding: '15px 20px',
+                    marginBottom: '20px'
+                }}>
+                    <strong style={{ color: '#b91c1c' }}>⚠️ Verification Analysis Failed</strong>
+                    <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#35516b' }}>
+                        There was an error processing your claim. Our team will review it manually.
+                    </p>
+                </div>
+            )}
+
+            <div className="claim-grid">
+                {/* Basic Information */}
+                <div className="claim-card">
+                    <h2>📋 Basic Information</h2>
+                    <div className="info-grid">
+                        <div className="info-item">
+                            <span className="info-label">Status</span>
+                            {getStatusBadge(claim.status)}
+                        </div>
+                        <div className="info-item">
+                            <span className="info-label">Submitted By</span>
+                            <span className="info-value">{claim.user_email}</span>
+                        </div>
+                        <div className="info-item">
+                            <span className="info-label">Submission Date</span>
+                            <span className="info-value">
+                                {new Date(claim.created_at).toLocaleString()}
+                            </span>
+                        </div>
+                        {claim.accident_date && (
                             <div className="info-item">
-                                <span className="info-label">Status</span>
-                                {getStatusBadge(claim.status)}
-                            </div>
-                            <div className="info-item">
-                                <span className="info-label">Submitted By</span>
-                                <span className="info-value">{claim.user_email}</span>
-                            </div>
-                            <div className="info-item">
-                                <span className="info-label">Submission Date</span>
+                                <span className="info-label">Accident Date</span>
                                 <span className="info-value">
-                                    {new Date(claim.created_at).toLocaleString()}
+                                    {new Date(claim.accident_date).toLocaleDateString()}
                                 </span>
                             </div>
-                            {claim.accident_date && (
+                        )}
+                        {claim.vehicle_number_plate && (
+                            <div className="info-item">
+                                <span className="info-label">Vehicle Plate</span>
+                                <span className="info-value plate-number">{claim.vehicle_number_plate}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Claim Description */}
+                {claim.description && (
+                    <div className="claim-card full-width">
+                        <h2>📝 Claim Description</h2>
+                        <p className="description-text">{claim.description}</p>
+                    </div>
+                )}
+
+                {/* Rule-Based Verification Results */}
+                {claim.forensic_analysis && (
+                    <>
+                        {/* Verification Decision */}
+                        <div className="claim-card full-width">
+                            <h2>⚖️ Rule-Based Verification Decision</h2>
+                            <div className="info-grid">
                                 <div className="info-item">
-                                    <span className="info-label">Accident Date</span>
-                                    <span className="info-value">
-                                        {new Date(claim.accident_date).toLocaleDateString()}
+                                    <span className="info-label">Verification Status</span>
+                                    <span className={`ai-badge ${claim.ai_recommendation || claim.status}`}>
+                                        {(claim.ai_recommendation || claim.status)?.toUpperCase()}
                                     </span>
                                 </div>
-                            )}
-                            {claim.vehicle_number_plate && (
                                 <div className="info-item">
-                                    <span className="info-label">Vehicle Plate</span>
-                                    <span className="info-value plate-number">{claim.vehicle_number_plate}</span>
+                                    <span className="info-label">Severity Score</span>
+                                    <span className="info-value">
+                                        {claim.forensic_analysis.overall_confidence_score || 0}
+                                    </span>
                                 </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Claim Description */}
-                    {claim.description && (
-                        <div className="claim-card full-width">
-                            <h2>📝 Claim Description</h2>
-                            <p className="description-text">{claim.description}</p>
-                        </div>
-                    )}
-
-                    {/* Rule-Based Verification Results */}
-                    {claim.forensic_analysis && (
-                        <>
-                            {/* Verification Decision */}
-                            <div className="claim-card full-width">
-                                <h2>⚖️ Rule-Based Verification Decision</h2>
-                                <div className="info-grid">
+                                {claim.estimated_cost_min && claim.estimated_cost_max && (
                                     <div className="info-item">
-                                        <span className="info-label">Verification Status</span>
-                                        <span className={`ai-badge ${claim.ai_recommendation || claim.status}`}>
-                                            {(claim.ai_recommendation || claim.status)?.toUpperCase()}
+                                        <span className="info-label">Estimated Repair Cost</span>
+                                        <span className="info-value cost">
+                                            ₹{claim.estimated_cost_min?.toLocaleString()} - ₹{claim.estimated_cost_max?.toLocaleString()}
                                         </span>
-                                    </div>
-                                    <div className="info-item">
-                                        <span className="info-label">Severity Score</span>
-                                        <span className="info-value">
-                                            {claim.forensic_analysis.overall_confidence_score || 0}
-                                        </span>
-                                    </div>
-                                    {claim.estimated_cost_min && claim.estimated_cost_max && (
-                                        <div className="info-item">
-                                            <span className="info-label">Estimated Repair Cost</span>
-                                            <span className="info-value cost">
-                                                ₹{claim.estimated_cost_min?.toLocaleString()} - ₹{claim.estimated_cost_max?.toLocaleString()}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {claim.forensic_analysis.ai_reasoning && (
-                                    <div className="reasoning-section">
-                                        <span className="info-label">Decision Reason:</span>
-                                        <p className="reasoning-text">{claim.forensic_analysis.ai_reasoning}</p>
-                                    </div>
-                                )}
-
-                                {/* Failed Checks */}
-                                {claim.forensic_analysis.ai_risk_flags && claim.forensic_analysis.ai_risk_flags.length > 0 && (
-                                    <div className="risk-flags" style={{ marginTop: '20px' }}>
-                                        <h3 style={{ color: '#dc3545', marginBottom: '15px' }}>
-                                            ⚠️ Failed Verification Checks ({claim.forensic_analysis.ai_risk_flags.length})
-                                        </h3>
-                                        <div className="flags-list">
-                                            {claim.forensic_analysis.ai_risk_flags.map((flag, index) => (
-                                                <div key={index} style={{
-                                                    backgroundColor: '#f8d7da',
-                                                    border: '1px solid #f5c2c7',
-                                                    borderRadius: '6px',
-                                                    padding: '12px 15px',
-                                                    marginBottom: '10px',
-                                                    fontSize: '14px',
-                                                    color: '#842029'
-                                                }}>
-                                                    <strong>❌ {flag}</strong>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Passed Checks Indicator */}
-                                {(!claim.forensic_analysis.ai_risk_flags || claim.forensic_analysis.ai_risk_flags.length === 0) && (
-                                    <div style={{
-                                        marginTop: '20px',
-                                        backgroundColor: '#d1e7dd',
-                                        border: '1px solid #badbcc',
-                                        borderRadius: '6px',
-                                        padding: '15px',
-                                        color: '#0f5132'
-                                    }}>
-                                        <strong>✅ All Verification Checks Passed</strong>
-                                        <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
-                                            This claim passed all 8 fraud detection rules and is eligible for processing.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </>
-                    )}
-
-                    {/* Forensic Analysis */}
-                    {claim.forensic_analysis && (
-                        <>
-                            {/* Fraud Detection & Risk Assessment */}
-                            <div className="claim-card">
-                                <h2>🚨 Fraud Detection & Risk Assessment</h2>
-                                <div className="info-grid">
-                                    <div className="info-item">
-                                        <span className="info-label">Authenticity Score</span>
-                                        <span className={`score-badge ${claim.forensic_analysis.authenticity_score >= 80 ? 'high' : claim.forensic_analysis.authenticity_score >= 50 ? 'medium' : 'low'}`}>
-                                            {claim.forensic_analysis.authenticity_score ? `${claim.forensic_analysis.authenticity_score}/100` : 'N/A'}
-                                        </span>
-                                    </div>
-                                    <div className="info-item">
-                                        <span className="info-label">Fraud Probability</span>
-                                        <span className={`fraud-badge ${claim.forensic_analysis.fraud_probability < 30 ? 'low' : claim.forensic_analysis.fraud_probability < 70 ? 'medium' : 'high'}`}>
-                                            {claim.forensic_analysis.fraud_probability ? `${claim.forensic_analysis.fraud_probability}%` : 'N/A'}
-                                        </span>
-                                    </div>
-                                    <div className="info-item">
-                                        <span className="info-label">Forgery Detected</span>
-                                        <span className={`badge ${claim.forensic_analysis.forgery_detected ? 'danger' : 'success'}`}>
-                                            {claim.forensic_analysis.forgery_detected ? '⚠️ YES' : '✓ NO'}
-                                        </span>
-                                    </div>
-                                    <div className="info-item">
-                                        <span className="info-label">Confidence Score</span>
-                                        <span className="info-value">{claim.forensic_analysis.confidence_score || 'N/A'}/100</span>
-                                    </div>
-                                </div>
-
-                                {claim.forensic_analysis.risk_flags && claim.forensic_analysis.risk_flags.length > 0 && (
-                                    <div className="risk-flags">
-                                        <span className="info-label">⚠️ Risk Flags:</span>
-                                        <div className="flags-list">
-                                            {claim.forensic_analysis.risk_flags.map((flag, index) => (
-                                                <span key={index} className="risk-tag">{flag}</span>
-                                            ))}
-                                        </div>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Vehicle Identification */}
-                            <div className="claim-card">
-                                <h2>🚗 Vehicle Identification (AI)</h2>
-                                <div className="info-grid">
-                                    {claim.forensic_analysis.vehicle_make && (
-                                        <div className="info-item">
-                                            <span className="info-label">Make</span>
-                                            <span className="info-value">{claim.forensic_analysis.vehicle_make}</span>
-                                        </div>
-                                    )}
-                                    {claim.forensic_analysis.vehicle_model && (
-                                        <div className="info-item">
-                                            <span className="info-label">Model</span>
-                                            <span className="info-value">{claim.forensic_analysis.vehicle_model}</span>
-                                        </div>
-                                    )}
-                                    {claim.forensic_analysis.vehicle_year && (
-                                        <div className="info-item">
-                                            <span className="info-label">Year</span>
-                                            <span className="info-value">{claim.forensic_analysis.vehicle_year}</span>
-                                        </div>
-                                    )}
-                                    {claim.forensic_analysis.vehicle_color && (
-                                        <div className="info-item">
-                                            <span className="info-label">Color</span>
-                                            <span className="info-value">{claim.forensic_analysis.vehicle_color}</span>
-                                        </div>
-                                    )}
-                                    {claim.forensic_analysis.license_plate_text && (
-                                        <div className="info-item">
-                                            <span className="info-label">License Plate (OCR)</span>
-                                            <span className="info-value plate-number">{claim.forensic_analysis.license_plate_text}</span>
-                                        </div>
-                                    )}
-                                    {claim.forensic_analysis.license_plate_match_status && (
-                                        <div className="info-item">
-                                            <span className="info-label">Plate Verification</span>
-                                            <span className={`badge ${claim.forensic_analysis.license_plate_match_status === 'MATCH' ? 'success' : claim.forensic_analysis.license_plate_match_status === 'MISMATCH' ? 'danger' : 'warning'}`}>
-                                                {claim.forensic_analysis.license_plate_match_status}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* YOLO Damage Detection */}
-                            {claim.forensic_analysis.yolo_damage_detected && (
-                                <div className="claim-card">
-                                    <h2>🎯 YOLO Damage Detection (GPU-Accelerated)</h2>
-                                    <div className="info-grid">
-                                        <div className="info-item">
-                                            <span className="info-label">Damage Detected</span>
-                                            <span className="badge success">✓ YES</span>
-                                        </div>
-                                        {claim.forensic_analysis.yolo_severity && (
-                                            <div className="info-item">
-                                                <span className="info-label">YOLO Severity</span>
-                                                <span className={`severity-badge ${claim.forensic_analysis.yolo_severity}`}>
-                                                    {claim.forensic_analysis.yolo_severity.toUpperCase()}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    {claim.forensic_analysis.yolo_summary && (
-                                        <div className="reasoning-section">
-                                            <span className="info-label">YOLO Summary:</span>
-                                            <p className="reasoning-text">{claim.forensic_analysis.yolo_summary}</p>
-                                        </div>
-                                    )}
+                            {claim.forensic_analysis.ai_reasoning && (
+                                <div className="reasoning-section">
+                                    <span className="info-label">Decision Reason:</span>
+                                    <p className="reasoning-text">{claim.forensic_analysis.ai_reasoning}</p>
                                 </div>
                             )}
 
-                            {/* AI Damage Assessment */}
-                            <div className="claim-card">
-                                <h2>🤖 AI Damage Assessment (Groq)</h2>
-                                <div className="info-grid">
-                                    {claim.forensic_analysis.ai_damage_type && (
-                                        <div className="info-item">
-                                            <span className="info-label">Damage Type</span>
-                                            <span className="info-value">{claim.forensic_analysis.ai_damage_type}</span>
-                                        </div>
-                                    )}
-                                    {claim.forensic_analysis.ai_severity && (
-                                        <div className="info-item">
-                                            <span className="info-label">Severity Level</span>
-                                            <span className={`severity-badge ${claim.forensic_analysis.ai_severity}`}>
-                                                {claim.forensic_analysis.ai_severity.toUpperCase()}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {claim.forensic_analysis.ai_structural_damage !== null && (
-                                        <div className="info-item">
-                                            <span className="info-label">Structural Damage</span>
-                                            <span className={`badge ${claim.forensic_analysis.ai_structural_damage ? 'danger' : 'success'}`}>
-                                                {claim.forensic_analysis.ai_structural_damage ? '⚠️ YES' : '✓ NO'}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {(claim.forensic_analysis.ai_cost_min || claim.forensic_analysis.ai_cost_max) && (
-                                        <div className="info-item">
-                                            <span className="info-label">AI Cost Estimate</span>
-                                            <span className="info-value cost">
-                                                ₹{claim.forensic_analysis.ai_cost_min?.toLocaleString()} - ₹{claim.forensic_analysis.ai_cost_max?.toLocaleString()}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {claim.forensic_analysis.ai_affected_parts && claim.forensic_analysis.ai_affected_parts.length > 0 && (
-                                    <div className="affected-parts">
-                                        <span className="info-label">Affected Parts:</span>
-                                        <div className="parts-list">
-                                            {claim.forensic_analysis.ai_affected_parts.map((part, index) => (
-                                                <span key={index} className="part-tag">{part}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {claim.forensic_analysis.ai_safety_concerns && claim.forensic_analysis.ai_safety_concerns.length > 0 && (
-                                    <div className="safety-concerns">
-                                        <span className="info-label">⚠️ Safety Concerns:</span>
-                                        <ul>
-                                            {claim.forensic_analysis.ai_safety_concerns.map((concern, index) => (
-                                                <li key={index}>{concern}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-
-                                {claim.forensic_analysis.ai_reasoning && (
-                                    <div className="reasoning-section">
-                                        <span className="info-label">AI Reasoning:</span>
-                                        <p className="reasoning-text">{claim.forensic_analysis.ai_reasoning}</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Pre-existing Damage */}
-                            {claim.forensic_analysis.pre_existing_damage_detected && (
-                                <div className="claim-card">
-                                    <h2>🔍 Pre-existing Damage Detection</h2>
-                                    <div className="info-grid">
-                                        <div className="info-item">
-                                            <span className="info-label">Pre-existing Damage</span>
-                                            <span className="badge warning">⚠️ DETECTED</span>
-                                        </div>
-                                        <div className="info-item">
-                                            <span className="info-label">Confidence</span>
-                                            <span className="info-value">{claim.forensic_analysis.pre_existing_confidence}%</span>
-                                        </div>
-                                    </div>
-                                    {claim.forensic_analysis.pre_existing_description && (
-                                        <div className="reasoning-section">
-                                            <span className="info-label">Description:</span>
-                                            <p className="reasoning-text">{claim.forensic_analysis.pre_existing_description}</p>
-                                        </div>
-                                    )}
-                                    {claim.forensic_analysis.pre_existing_indicators && claim.forensic_analysis.pre_existing_indicators.length > 0 && (
-                                        <div className="indicators">
-                                            <span className="info-label">Indicators:</span>
-                                            <div className="parts-list">
-                                                {claim.forensic_analysis.pre_existing_indicators.map((indicator, index) => (
-                                                    <span key={index} className="part-tag">{indicator}</span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Image Metadata */}
-                            {(claim.forensic_analysis.exif_timestamp || claim.forensic_analysis.exif_location_name) && (
-                                <div className="claim-card">
-                                    <h2>📸 Image Metadata (EXIF)</h2>
-                                    <div className="info-grid">
-                                        {claim.forensic_analysis.exif_timestamp && (
-                                            <div className="info-item">
-                                                <span className="info-label">Photo Timestamp</span>
-                                                <span className="info-value">
-                                                    {new Date(claim.forensic_analysis.exif_timestamp).toLocaleString()}
-                                                </span>
-                                            </div>
-                                        )}
-                                        {claim.forensic_analysis.exif_location_name && (
-                                            <div className="info-item">
-                                                <span className="info-label">Location</span>
-                                                <span className="info-value">{claim.forensic_analysis.exif_location_name}</span>
-                                            </div>
-                                        )}
-                                        {claim.forensic_analysis.exif_camera_make && (
-                                            <div className="info-item">
-                                                <span className="info-label">Camera</span>
-                                                <span className="info-value">
-                                                    {claim.forensic_analysis.exif_camera_make} {claim.forensic_analysis.exif_camera_model}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                        </>
-                    )}
-
-                    {/* Uploaded Images */}
-                    {(claim.image_paths?.length > 0 || claim.front_image_path || claim.case_number_image_path || claim.estimate_bill_path) && (
-                        <div className="claim-card full-width">
-                            <h2>📷 Uploaded Files</h2>
-
-                            {claim.image_paths?.length > 0 && (
-                                <div className="image-section">
-                                    <h3>Damage Images ({claim.image_paths.length})</h3>
-                                    <div className="image-gallery">
-                                        {claim.image_paths.map((path, index) => (
-                                            <div key={index} className="image-item">
-                                                <img
-                                                    src={`http://localhost:8000/uploads/${path.split('/').pop()}`}
-                                                    alt={`Damage ${index + 1}`}
-                                                    onError={(e) => {
-                                                        e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23ddd' width='200' height='200'/%3E%3Ctext fill='%23999' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3EImage Not Found%3C/text%3E%3C/svg%3E";
-                                                    }}
-                                                />
-                                                <span className="image-label">Damage {index + 1}</span>
+                            {/* Failed Checks */}
+                            {claim.forensic_analysis.ai_risk_flags && claim.forensic_analysis.ai_risk_flags.length > 0 && (
+                                <div className="risk-flags" style={{ marginTop: '20px' }}>
+                                    <h3 style={{ color: '#dc3545', marginBottom: '15px' }}>
+                                        ⚠️ Failed Verification Checks ({claim.forensic_analysis.ai_risk_flags.length})
+                                    </h3>
+                                    <div className="flags-list">
+                                        {claim.forensic_analysis.ai_risk_flags.map((flag, index) => (
+                                            <div key={index} style={{
+                                                backgroundColor: '#f8d7da',
+                                                border: '1px solid #f5c2c7',
+                                                borderRadius: '6px',
+                                                padding: '12px 15px',
+                                                marginBottom: '10px',
+                                                fontSize: '14px',
+                                                color: '#842029'
+                                            }}>
+                                                <strong>❌ {flag}</strong>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             )}
 
-                            {claim.front_image_path && (
-                                <div className="image-section">
-                                    <h3>Front View Image</h3>
-                                    <div className="image-gallery">
-                                        <div className="image-item">
-                                            <img
-                                                src={`http://localhost:8000/uploads/${claim.front_image_path.split('/').pop()}`}
-                                                alt="Front View"
-                                                onError={(e) => {
-                                                    e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23ddd' width='200' height='200'/%3E%3Ctext fill='%23999' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3EImage Not Found%3C/text%3E%3C/svg%3E";
-                                                }}
-                                            />
-                                            <span className="image-label">Front View</span>
-                                        </div>
-                                    </div>
+                            {/* Passed Checks Indicator */}
+                            {(!claim.forensic_analysis.ai_risk_flags || claim.forensic_analysis.ai_risk_flags.length === 0) && (
+                                <div style={{
+                                    marginTop: '20px',
+                                    backgroundColor: '#d1e7dd',
+                                    border: '1px solid #badbcc',
+                                    borderRadius: '6px',
+                                    padding: '15px',
+                                    color: '#0f5132'
+                                }}>
+                                    <strong>✅ All Verification Checks Passed</strong>
+                                    <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
+                                        This claim passed all 8 fraud detection rules and is eligible for processing.
+                                    </p>
                                 </div>
                             )}
+                        </div>
+                    </>
+                )}
 
-                            {claim.case_number_image_path && (
-                                <div className="image-section">
-                                    <h3>Case Number Image</h3>
-                                    <div className="image-gallery">
-                                        <div className="image-item">
-                                            <img
-                                                src={`http://localhost:8000/uploads/${claim.case_number_image_path.split('/').pop()}`}
-                                                alt="Case Number"
-                                                className="img-fluid"
-                                                style={{ maxWidth: '300px', borderRadius: '8px' }}
-                                                onError={(e) => {
-                                                    e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23ddd' width='200' height='200'/%3E%3Ctext fill='%23999' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3EImage Not Found%3C/text%3E%3C/svg%3E";
-                                                }}
-                                            />
-                                            <span className="image-label">Case Number</span>
-                                        </div>
-                                    </div>
+                {/* Forensic Analysis */}
+                {claim.forensic_analysis && (
+                    <>
+                        {/* Fraud Detection & Risk Assessment */}
+                        <div className="claim-card">
+                            <h2>🚨 Fraud Detection & Risk Assessment</h2>
+                            <div className="info-grid">
+                                <div className="info-item">
+                                    <span className="info-label">Authenticity Score</span>
+                                    <span className={`score-badge ${claim.forensic_analysis.authenticity_score >= 80 ? 'high' : claim.forensic_analysis.authenticity_score >= 50 ? 'medium' : 'low'}`}>
+                                        {claim.forensic_analysis.authenticity_score ? `${claim.forensic_analysis.authenticity_score}/100` : 'N/A'}
+                                    </span>
                                 </div>
-                            )}
+                                <div className="info-item">
+                                    <span className="info-label">Fraud Probability</span>
+                                    <span className={`fraud-badge ${claim.forensic_analysis.fraud_probability < 30 ? 'low' : claim.forensic_analysis.fraud_probability < 70 ? 'medium' : 'high'}`}>
+                                        {claim.forensic_analysis.fraud_probability ? `${claim.forensic_analysis.fraud_probability}%` : 'N/A'}
+                                    </span>
+                                </div>
+                                <div className="info-item">
+                                    <span className="info-label">Forgery Detected</span>
+                                    <span className={`badge ${claim.forensic_analysis.forgery_detected ? 'danger' : 'success'}`}>
+                                        {claim.forensic_analysis.forgery_detected ? '⚠️ YES' : '✓ NO'}
+                                    </span>
+                                </div>
+                                <div className="info-item">
+                                    <span className="info-label">Confidence Score</span>
+                                    <span className="info-value">{claim.forensic_analysis.confidence_score || 'N/A'}/100</span>
+                                </div>
+                            </div>
 
-                            {claim.estimate_bill_path && (
-                                <div className="image-section">
-                                    <h3>Estimate Bill</h3>
-                                    <div className="file-item">
-                                        <span>📄 {claim.estimate_bill_path.split('/').pop()}</span>
-                                        <a
-                                            href={`http://localhost:8000/uploads/${claim.estimate_bill_path.split('/').pop()}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="view-file-btn"
-                                        >
-                                            View File
-                                        </a>
+                            {claim.forensic_analysis.risk_flags && claim.forensic_analysis.risk_flags.length > 0 && (
+                                <div className="risk-flags">
+                                    <span className="info-label">⚠️ Risk Flags:</span>
+                                    <div className="flags-list">
+                                        {claim.forensic_analysis.risk_flags.map((flag, index) => (
+                                            <span key={index} className="risk-tag">{flag}</span>
+                                        ))}
                                     </div>
                                 </div>
                             )}
                         </div>
-                    )}
-                </div>
+
+                        {/* Vehicle Identification */}
+                        <div className="claim-card">
+                            <h2>🚗 Vehicle Identification (AI)</h2>
+                            <div className="info-grid">
+                                {claim.forensic_analysis.vehicle_make && (
+                                    <div className="info-item">
+                                        <span className="info-label">Make</span>
+                                        <span className="info-value">{claim.forensic_analysis.vehicle_make}</span>
+                                    </div>
+                                )}
+                                {claim.forensic_analysis.vehicle_model && (
+                                    <div className="info-item">
+                                        <span className="info-label">Model</span>
+                                        <span className="info-value">{claim.forensic_analysis.vehicle_model}</span>
+                                    </div>
+                                )}
+                                {claim.forensic_analysis.vehicle_year && (
+                                    <div className="info-item">
+                                        <span className="info-label">Year</span>
+                                        <span className="info-value">{claim.forensic_analysis.vehicle_year}</span>
+                                    </div>
+                                )}
+                                {claim.forensic_analysis.vehicle_color && (
+                                    <div className="info-item">
+                                        <span className="info-label">Color</span>
+                                        <span className="info-value">{claim.forensic_analysis.vehicle_color}</span>
+                                    </div>
+                                )}
+                                {claim.forensic_analysis.license_plate_text && (
+                                    <div className="info-item">
+                                        <span className="info-label">License Plate (OCR)</span>
+                                        <span className="info-value plate-number">{claim.forensic_analysis.license_plate_text}</span>
+                                    </div>
+                                )}
+                                {claim.forensic_analysis.license_plate_match_status && (
+                                    <div className="info-item">
+                                        <span className="info-label">Plate Verification</span>
+                                        <span className={`badge ${claim.forensic_analysis.license_plate_match_status === 'MATCH' ? 'success' : claim.forensic_analysis.license_plate_match_status === 'MISMATCH' ? 'danger' : 'warning'}`}>
+                                            {claim.forensic_analysis.license_plate_match_status}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* YOLO Damage Detection */}
+                        {claim.forensic_analysis.yolo_damage_detected && (
+                            <div className="claim-card">
+                                <h2>🎯 YOLO Damage Detection (GPU-Accelerated)</h2>
+                                <div className="info-grid">
+                                    <div className="info-item">
+                                        <span className="info-label">Damage Detected</span>
+                                        <span className="badge success">✓ YES</span>
+                                    </div>
+                                    {claim.forensic_analysis.yolo_severity && (
+                                        <div className="info-item">
+                                            <span className="info-label">YOLO Severity</span>
+                                            <span className={`severity-badge ${claim.forensic_analysis.yolo_severity}`}>
+                                                {claim.forensic_analysis.yolo_severity.toUpperCase()}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                                {claim.forensic_analysis.yolo_summary && (
+                                    <div className="reasoning-section">
+                                        <span className="info-label">YOLO Summary:</span>
+                                        <p className="reasoning-text">{claim.forensic_analysis.yolo_summary}</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* AI Damage Assessment */}
+                        <div className="claim-card">
+                            <h2>🤖 AI Damage Assessment (Groq)</h2>
+                            <div className="info-grid">
+                                {claim.forensic_analysis.ai_damage_type && (
+                                    <div className="info-item">
+                                        <span className="info-label">Damage Type</span>
+                                        <span className="info-value">{claim.forensic_analysis.ai_damage_type}</span>
+                                    </div>
+                                )}
+                                {claim.forensic_analysis.ai_severity && (
+                                    <div className="info-item">
+                                        <span className="info-label">Severity Level</span>
+                                        <span className={`severity-badge ${claim.forensic_analysis.ai_severity}`}>
+                                            {claim.forensic_analysis.ai_severity.toUpperCase()}
+                                        </span>
+                                    </div>
+                                )}
+                                {claim.forensic_analysis.ai_structural_damage !== null && (
+                                    <div className="info-item">
+                                        <span className="info-label">Structural Damage</span>
+                                        <span className={`badge ${claim.forensic_analysis.ai_structural_damage ? 'danger' : 'success'}`}>
+                                            {claim.forensic_analysis.ai_structural_damage ? '⚠️ YES' : '✓ NO'}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Damaged Panels */}
+                            {claim.forensic_analysis.ai_damaged_panels && claim.forensic_analysis.ai_damaged_panels.length > 0 && (
+                                <div className="affected-parts" style={{ marginTop: '15px' }}>
+                                    <span className="info-label">Damaged Panels Detected:</span>
+                                    <div className="parts-list">
+                                        {claim.forensic_analysis.ai_damaged_panels.map((part, index) => (
+                                            <span key={index} className="part-tag">{part.replace(/_/g, ' ')}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {claim.forensic_analysis.ai_reasoning && (
+                                <div className="reasoning-section">
+                                    <span className="info-label">AI Reasoning:</span>
+                                    <p className="reasoning-text">{claim.forensic_analysis.ai_reasoning}</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Repair Cost Breakdown */}
+                        {claim.forensic_analysis.repair_cost_breakdown && (
+                            <div className="claim-card full-width">
+                                <h2>🔧 Estimated Repair Cost Breakdown</h2>
+
+                                {/* Vehicle info */}
+                                {claim.forensic_analysis.repair_cost_breakdown.vehicle_info &&
+                                    claim.forensic_analysis.repair_cost_breakdown.vehicle_info !== "Unknown Vehicle" && (
+                                        <p style={{ color: '#666', marginBottom: '15px', fontSize: '14px' }}>
+                                            Vehicle: <strong>{claim.forensic_analysis.repair_cost_breakdown.vehicle_info}</strong>
+                                        </p>
+                                    )}
+
+                                {/* Parts table */}
+                                {claim.forensic_analysis.repair_cost_breakdown.breakdown?.length > 0 ? (
+                                    <div style={{ overflowX: 'auto' }}>
+                                        <table style={{
+                                            width: '100%',
+                                            borderCollapse: 'collapse',
+                                            fontSize: '14px',
+                                            marginBottom: '15px'
+                                        }}>
+                                            <thead>
+                                                <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
+                                                    <th style={{ padding: '10px 12px', textAlign: 'left', color: '#495057' }}>Part</th>
+                                                    <th style={{ padding: '10px 12px', textAlign: 'right', color: '#495057' }}>Min (₹)</th>
+                                                    <th style={{ padding: '10px 12px', textAlign: 'right', color: '#495057' }}>Max (₹)</th>
+                                                    <th style={{ padding: '10px 12px', textAlign: 'right', color: '#495057' }}>USD Range</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {claim.forensic_analysis.repair_cost_breakdown.breakdown.map((item, idx) => (
+                                                    <tr key={idx} style={{
+                                                        borderBottom: '1px solid #dee2e6',
+                                                        backgroundColor: idx % 2 === 0 ? '#fff' : '#f8f9fa'
+                                                    }}>
+                                                        <td style={{ padding: '10px 12px' }}>
+                                                            <span style={{ marginRight: '8px' }}>{item.icon}</span>
+                                                            {item.part}
+                                                        </td>
+                                                        <td style={{ padding: '10px 12px', textAlign: 'right', color: '#198754', fontWeight: '500' }}>
+                                                            ₹{item.inr_min?.toLocaleString('en-IN')}
+                                                        </td>
+                                                        <td style={{ padding: '10px 12px', textAlign: 'right', color: '#dc3545', fontWeight: '500' }}>
+                                                            ₹{item.inr_max?.toLocaleString('en-IN')}
+                                                        </td>
+                                                        <td style={{ padding: '10px 12px', textAlign: 'right', color: '#6c757d', fontSize: '12px' }}>
+                                                            ${item.usd_min} – ${item.usd_max}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                            <tfoot>
+                                                <tr style={{ backgroundColor: '#e8f4fd', borderTop: '2px solid #0d6efd' }}>
+                                                    <td style={{ padding: '12px', fontWeight: '700', color: '#0d6efd' }}>
+                                                        Total Estimate ({claim.forensic_analysis.repair_cost_breakdown.breakdown.length} parts)
+                                                    </td>
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: '700', color: '#198754', fontSize: '16px' }}>
+                                                        ₹{claim.forensic_analysis.repair_cost_breakdown.total_inr_min?.toLocaleString('en-IN')}
+                                                    </td>
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: '700', color: '#dc3545', fontSize: '16px' }}>
+                                                        ₹{claim.forensic_analysis.repair_cost_breakdown.total_inr_max?.toLocaleString('en-IN')}
+                                                    </td>
+                                                    <td style={{ padding: '12px', textAlign: 'right', color: '#6c757d', fontSize: '12px' }}>
+                                                        ${claim.forensic_analysis.repair_cost_breakdown.total_usd_min} – ${claim.forensic_analysis.repair_cost_breakdown.total_usd_max}
+                                                    </td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <p style={{ color: '#6c757d', fontStyle: 'italic' }}>
+                                        No specific parts detected for pricing. Showing Groq AI estimate below.
+                                    </p>
+                                )}
+
+                                {/* Unrecognized panels */}
+                                {claim.forensic_analysis.repair_cost_breakdown.unrecognized_panels?.length > 0 && (
+                                    <div style={{ marginTop: '10px', fontSize: '13px', color: '#6c757d' }}>
+                                        <strong>⚠️ Unpriced panels:</strong>{' '}
+                                        {claim.forensic_analysis.repair_cost_breakdown.unrecognized_panels.join(', ')}
+                                    </div>
+                                )}
+
+                                {/* Conversion note */}
+                                <div style={{
+                                    marginTop: '15px',
+                                    padding: '10px 14px',
+                                    backgroundColor: '#fff3cd',
+                                    borderRadius: '6px',
+                                    fontSize: '12px',
+                                    color: '#856404',
+                                    border: '1px solid #ffc107'
+                                }}>
+                                    💱 Prices are based on US automotive repair industry averages (USD), converted to INR at{' '}
+                                    <strong>₹{claim.forensic_analysis.repair_cost_breakdown.usd_to_inr_rate}/USD</strong>.
+                                    Actual costs may vary based on location, vehicle model, and labour rates.
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Pre-existing Damage */}
+                        {claim.forensic_analysis.pre_existing_damage_detected && (
+                            <div className="claim-card">
+                                <h2>🔍 Pre-existing Damage Detection</h2>
+                                <div className="info-grid">
+                                    <div className="info-item">
+                                        <span className="info-label">Pre-existing Damage</span>
+                                        <span className="badge warning">⚠️ DETECTED</span>
+                                    </div>
+                                    <div className="info-item">
+                                        <span className="info-label">Confidence</span>
+                                        <span className="info-value">{claim.forensic_analysis.pre_existing_confidence}%</span>
+                                    </div>
+                                </div>
+                                {claim.forensic_analysis.pre_existing_description && (
+                                    <div className="reasoning-section">
+                                        <span className="info-label">Description:</span>
+                                        <p className="reasoning-text">{claim.forensic_analysis.pre_existing_description}</p>
+                                    </div>
+                                )}
+                                {claim.forensic_analysis.pre_existing_indicators && claim.forensic_analysis.pre_existing_indicators.length > 0 && (
+                                    <div className="indicators">
+                                        <span className="info-label">Indicators:</span>
+                                        <div className="parts-list">
+                                            {claim.forensic_analysis.pre_existing_indicators.map((indicator, index) => (
+                                                <span key={index} className="part-tag">{indicator}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Image Metadata */}
+                        {(claim.forensic_analysis.exif_timestamp || claim.forensic_analysis.exif_location_name) && (
+                            <div className="claim-card">
+                                <h2>📸 Image Metadata (EXIF)</h2>
+                                <div className="info-grid">
+                                    {claim.forensic_analysis.exif_timestamp && (
+                                        <div className="info-item">
+                                            <span className="info-label">Photo Timestamp</span>
+                                            <span className="info-value">
+                                                {new Date(claim.forensic_analysis.exif_timestamp).toLocaleString()}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {claim.forensic_analysis.exif_location_name && (
+                                        <div className="info-item">
+                                            <span className="info-label">Location</span>
+                                            <span className="info-value">{claim.forensic_analysis.exif_location_name}</span>
+                                        </div>
+                                    )}
+                                    {claim.forensic_analysis.exif_camera_make && (
+                                        <div className="info-item">
+                                            <span className="info-label">Camera</span>
+                                            <span className="info-value">
+                                                {claim.forensic_analysis.exif_camera_make} {claim.forensic_analysis.exif_camera_model}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* Uploaded Images */}
+                {(claim.image_paths?.length > 0 || claim.front_image_path || claim.case_number_image_path || claim.estimate_bill_path) && (
+                    <div className="claim-card full-width">
+                        <h2>📷 Uploaded Files</h2>
+
+                        {claim.image_paths?.length > 0 && (
+                            <div className="image-section">
+                                <h3>Damage Images ({claim.image_paths.length})</h3>
+                                <div className="image-gallery">
+                                    {claim.image_paths.map((path, index) => (
+                                        <div key={index} className="image-item">
+                                            <img
+                                                src={`http://localhost:8000/uploads/${path.split('/').pop()}`}
+                                                alt={`Damage ${index + 1}`}
+                                                onError={(e) => {
+                                                    e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23ddd' width='200' height='200'/%3E%3Ctext fill='%23999' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3EImage Not Found%3C/text%3E%3C/svg%3E";
+                                                }}
+                                            />
+                                            <span className="image-label">Damage {index + 1}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {claim.front_image_path && (
+                            <div className="image-section">
+                                <h3>Front View Image</h3>
+                                <div className="image-gallery">
+                                    <div className="image-item">
+                                        <img
+                                            src={`http://localhost:8000/uploads/${claim.front_image_path.split('/').pop()}`}
+                                            alt="Front View"
+                                            onError={(e) => {
+                                                e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23ddd' width='200' height='200'/%3E%3Ctext fill='%23999' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3EImage Not Found%3C/text%3E%3C/svg%3E";
+                                            }}
+                                        />
+                                        <span className="image-label">Front View</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {claim.case_number_image_path && (
+                            <div className="image-section">
+                                <h3>Case Number Image</h3>
+                                <div className="image-gallery">
+                                    <div className="image-item">
+                                        <img
+                                            src={`http://localhost:8000/uploads/${claim.case_number_image_path.split('/').pop()}`}
+                                            alt="Case Number"
+                                            className="img-fluid"
+                                            style={{ maxWidth: '300px', borderRadius: '8px' }}
+                                            onError={(e) => {
+                                                e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23ddd' width='200' height='200'/%3E%3Ctext fill='%23999' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3EImage Not Found%3C/text%3E%3C/svg%3E";
+                                            }}
+                                        />
+                                        <span className="image-label">Case Number</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {claim.estimate_bill_path && (
+                            <div className="image-section">
+                                <h3>Estimate Bill</h3>
+                                <div className="file-item">
+                                    <span>📄 {claim.estimate_bill_path.split('/').pop()}</span>
+                                    <a
+                                        href={`http://localhost:8000/uploads/${claim.estimate_bill_path.split('/').pop()}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="view-file-btn"
+                                    >
+                                        View File
+                                    </a>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
-        </>
+        </div>
     );
 }
 
